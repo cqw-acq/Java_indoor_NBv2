@@ -34,12 +34,31 @@ public class api {
         return arr;
     }
 
+    public static int[] zhishu(int n) {
+        int x = 0;
+        int y = 0;
+        for (int i=1;i<=n;i++){
+            for (int j=2;j<=i;j++){
+                if (i%j==0){
+                    x++;
+                }
+            }
+            if (x==1){
+                System.out.println(i);
+                y++;
+            }
+            x=0;
+        }
+        return new int[]{y};
+    }
+
     static class SortHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String query = exchange.getRequestURI().getQuery();
             String bob_response = "请提供要排序的数组，格式：numbers=1,2,3,4,5";
             String grade_response = "请提供成绩参数";
+            String zhishu_response = "请提供n";
             if (query != null && query.startsWith("numbers=")) {
                 try {
                     String[] numberStrings = query.substring(8).split(",");
@@ -58,11 +77,20 @@ public class api {
                     grade_response = "无效的成绩输入";
                 }
             }
+            if (query != null && query.startsWith("n=")) {
+                try {
+                    int n = Integer.parseInt(query.substring(6));
+                    zhishu_response = getGrade(n);
+                } catch (NumberFormatException e) {
+                    zhishu_response = "无效的整型输入";
+                }
+            }
             exchange.sendResponseHeaders(200, bob_response.getBytes().length);
             exchange.sendResponseHeaders(200, grade_response.getBytes().length);
             OutputStream os = exchange.getResponseBody();
             os.write(bob_response.getBytes());
             os.write(grade_response.getBytes());
+            os.write(zhishu_response.getBytes());
             os.close();
         }
     }
@@ -70,6 +98,7 @@ public class api {
         HttpServer server = HttpServer.create(new InetSocketAddress(5050), 0);
         server.createContext("/grade", new score_grade_api.GradeHandler());
         server.createContext("/sort", new maopao_api.SortHandler());
+        server.createContext("/zhishu",new zhishu_api.zhishuHandler());
         server.setExecutor(null);
         server.start();
         System.out.println("API服务器在5050端口启动（用法：）");
